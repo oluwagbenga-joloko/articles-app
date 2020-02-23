@@ -1,4 +1,4 @@
-package test
+package tests
 
 import (
 	"log"
@@ -6,27 +6,68 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+	"time"
+
+	application "github.com/oluwagbenga-joloko/articles-app/app"
+	"github.com/oluwagbenga-joloko/articles-app/models"
 )
 
-var app App
+var app application.App
+
+var article1 = models.Article{
+	Title:     "Uncommonly",
+	Body:      "Full he none no side. Uncommonly surrounded considered for him are its. It we is read good soon",
+	Category:  "drama",
+	Publisher: "Mark Cane",
+}
+var article2 = models.Article{
+	Title:     "Give lady",
+	Body:      "Give lady of they such they sure it. Me contained explained my education. Vulgar as hearts by garret. ",
+	Category:  "comedy",
+	Publisher: "Mary Jane",
+}
+var article3 = models.Article{
+	Title:       "favourable no",
+	Body:        "Surrounded affronting favourable no mr. Lain knew like half she yet joy.",
+	Category:    "comedy",
+	Publisher:   "mr. Lain",
+	PublishedAt: time.Now(),
+}
+
+func clearTable() {
+	_, err := app.DB.Exec(models.ClearTables)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+}
+
+func CreateArticle(a *models.Article) {
+	err := models.CreateArticle(app.DB, a)
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestMain(m *testing.M) {
-	dbURL := "postgres://vmpnnoyk:AF5w7RkOJ9lmTivXvgR8Bsy6tllNnUSR@kandula.db.elephantsql.com:5432/vmpnnoyk"
 	log.Println("Do stuff BEFORE the tests!")
-	app = App{}
 	dbURL := os.Getenv("TEST_DB_URL")
-	app.initializeDb(dbURL)
-	app.initializeRoutes()
+	app.InitializeDb(dbURL)
+	defer app.DB.Close()
+	app.InitializeRoutes()
 	exitVal := m.Run()
+	_, err := app.DB.Exec(models.TearDown)
+	if err != nil {
+		log.Fatal(err)
+	}
 	log.Println("Do stuff AFTER the tests!")
 	os.Exit(exitVal)
 }
 
 func TestHomeResponse(t *testing.T) {
-
 	req := httptest.NewRequest("GET", "/", nil)
 	rr := httptest.NewRecorder()
-	app.router.ServeHTTP(rr, req)
+	app.Router.ServeHTTP(rr, req)
 	if status := rr.Code; status != http.StatusOK {
 		t.Errorf("handler returned wrong status code: got %v want %v",
 			status, http.StatusOK)

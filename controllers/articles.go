@@ -23,7 +23,6 @@ func CreateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 		}
 		err = models.CreateArticle(db, &article)
 		if err != nil {
-			fmt.Println(err)
 			if inputE, ok := err.(*models.InputError); ok {
 				utils.RespondWithError(w, http.StatusBadRequest, inputE.Message)
 				return
@@ -31,7 +30,7 @@ func CreateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
-		utils.RespondWithJSON(w, http.StatusOK, article)
+		utils.RespondWithJSON(w, http.StatusCreated, article)
 	}
 
 }
@@ -110,7 +109,7 @@ func DeleteArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
-		utils.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "articled deleted"})
+		utils.RespondWithJSON(w, http.StatusOK, map[string]string{"message": "article deleted"})
 	}
 }
 
@@ -125,7 +124,7 @@ func UpdateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		var data map[string]string
+		var data map[string]interface{}
 		err = json.NewDecoder(r.Body).Decode(&data)
 		if err != nil {
 			utils.RespondWithError(w, http.StatusBadRequest, "invalid json request")

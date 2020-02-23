@@ -23,14 +23,14 @@ type Article struct {
 
 // Publisher ....
 type Publisher struct {
-	ID   int `json:"id"`
-	Name int `json:"name"`
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 // Category ...
 type Category struct {
-	ID   int `json:"id"`
-	Name int `json:"name"`
+	ID   int    `json:"id"`
+	Name string `json:"name"`
 }
 
 //InputError ...
@@ -96,7 +96,7 @@ func DeleteArticle(db *sql.DB, id int) error {
 }
 
 // UpdateArticle ...
-func UpdateArticle(db *sql.DB, article *Article, data map[string]string) error {
+func UpdateArticle(db *sql.DB, article *Article, data map[string]interface{}) error {
 	updateableFields := []string{"title", "body", "published_at", "publisher", "category"}
 
 	var val []interface{}
@@ -110,14 +110,15 @@ func UpdateArticle(db *sql.DB, article *Article, data map[string]string) error {
 					return &InputError{"publisher body cannot be empty"}
 
 				}
+
 				var publisher Publisher
-				err := GetOrCreatePublisher(db, &publisher, data["publisher"])
+				err := GetOrCreatePublisher(db, &publisher, fmt.Sprintf("%v", data["publisher"]))
 				if err != nil {
 					return err
 				}
 				val = append(val, publisher.ID)
 				col = append(col, fmt.Sprintf("%s = $%v", "publisher_id", num))
-				article.Publisher = data["publisher"]
+				article.Publisher = publisher.Name
 				num++
 			}
 
@@ -127,13 +128,13 @@ func UpdateArticle(db *sql.DB, article *Article, data map[string]string) error {
 					return &InputError{"category body cannot be empty"}
 				}
 				var category Category
-				err := GetOrCreateCategory(db, &category, data["category"])
+				err := GetOrCreateCategory(db, &category, fmt.Sprintf("%v", data["category"]))
 				if err != nil {
 					return err
 				}
 				val = append(val, category.ID)
 				col = append(col, fmt.Sprintf("%s = $%v", "category_id", num))
-				article.Category = data["category"]
+				article.Category = category.Name
 				num++
 			}
 		} else {
@@ -151,11 +152,12 @@ func UpdateArticle(db *sql.DB, article *Article, data map[string]string) error {
 		}
 	}
 	bytes, err := json.Marshal(data)
+	if err != nil {
+		return err
+	}
 	json.Unmarshal(bytes, &article)
-
 	qString := "UPDATE articles SET " + strings.Join(col, ", ") + fmt.Sprintf(" WHERE id = $%v", num)
 	val = append(val, article.ID)
-	fmt.Println(qString, val)
 
 	res, err := db.Exec(qString, val...)
 
@@ -183,7 +185,7 @@ func CreateArticle(db *sql.DB, article *Article) error {
 		return &InputError{"article publisher is required and cannot be empty"}
 	}
 	if article.Category == "" {
-		return &InputError{"article Category is required and cannot be empty"}
+		return &InputError{"article category is required and cannot be empty"}
 	}
 
 	var publisher Publisher
@@ -272,10 +274,17 @@ COMMIT;
 // TearDown ...
 var TearDown = `
 BEGIN;
-DROP TABLE article_category;
-DROP TABLE article_publisher;
 DROP TABLE articles;
 DROP TABLE categories;
 DROP TABLE publishers;
 COMMIT;
+`
+
+//ClearTables ...
+var ClearTables = `
+BEGIN;
+DELETE FROM articles;
+DELETE FROM categories;
+DELETE FROM publishers;
+BEGIN;
 `
