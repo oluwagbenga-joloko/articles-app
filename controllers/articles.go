@@ -62,7 +62,6 @@ func ReadArticleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.R
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
-			fmt.Println(err)
 			utils.RespondWithError(w, http.StatusNotFound, "invalid article id")
 			return
 		}
@@ -91,7 +90,6 @@ func DeleteArticleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
 		if err != nil {
-			fmt.Println(err)
 			utils.RespondWithError(w, http.StatusNotFound, "invalid article id")
 			return
 		}
@@ -151,11 +149,11 @@ func UpdateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 
 		err = repository.UpdateArticle(db, &article, data)
 		if err != nil {
-			fmt.Println(err)
 			if inputE, ok := err.(*repository.InputError); ok {
 				utils.RespondWithError(w, http.StatusBadRequest, inputE.Message)
 				return
 			}
+			fmt.Println(err)
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}

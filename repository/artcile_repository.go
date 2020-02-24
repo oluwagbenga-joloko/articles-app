@@ -91,8 +91,7 @@ func UpdateArticle(db *sql.DB, article *models.Article, data map[string]interfac
 		if field == "publisher" {
 			if v, ok := data["publisher"]; ok == true {
 				if v == "" {
-					return &InputError{"publisher body cannot be empty"}
-
+					return &InputError{"article publisher cannot be empty"}
 				}
 
 				var publisher models.Publisher
@@ -109,7 +108,7 @@ func UpdateArticle(db *sql.DB, article *models.Article, data map[string]interfac
 		} else if field == "category" {
 			if v, ok := data["category"]; ok == true {
 				if v == "" {
-					return &InputError{"category body cannot be empty"}
+					return &InputError{"article category cannot be empty"}
 				}
 				var category models.Category
 				err := GetOrCreateCategory(db, &category, fmt.Sprintf("%v", data["category"]))
@@ -124,7 +123,7 @@ func UpdateArticle(db *sql.DB, article *models.Article, data map[string]interfac
 		} else {
 			if v, ok := data[field]; ok == true {
 				if v == "" {
-					return &InputError{fmt.Sprintf("%s cannot be empty", field)}
+					return &InputError{fmt.Sprintf("article %s cannot be empty", field)}
 				}
 				if v != "" {
 					val = append(val, data[field])
@@ -182,9 +181,11 @@ func CreateArticle(db *sql.DB, article *models.Article) error {
 	if err != nil {
 		return err
 	}
+	article.CreatedAt = time.Now()
+	article.UpdatedAt = time.Now()
 
 	row := db.QueryRow("INSERT INTO articles(title, body, created_at, updated_at, publisher_id, category_id, published_at) VALUES($1, $2, $3, $4, $5, $6, $7) RETURNING id",
-		article.Title, article.Body, time.Now(), time.Now(), publisher.ID, category.ID, article.PublishedAt)
+		article.Title, article.Body, article.CreatedAt, article.UpdatedAt, publisher.ID, category.ID, article.PublishedAt)
 	err = row.Scan(&article.ID)
 	if err != nil {
 		return err

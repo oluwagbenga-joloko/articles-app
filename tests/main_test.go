@@ -32,7 +32,7 @@ var article3 = models.Article{
 	Body:        "Surrounded affronting favourable no mr. Lain knew like half she yet joy.",
 	Category:    "comedy",
 	Publisher:   "mr. Lain",
-	PublishedAt: time.Now(),
+	PublishedAt: time.Now().UTC(),
 }
 
 func clearTable() {
@@ -51,7 +51,7 @@ func CreateArticle(a *models.Article) {
 }
 
 func TestMain(m *testing.M) {
-	log.Println("Do stuff BEFORE the tests!")
+	log.Println("Doing stuff BEFORE the tests!")
 	dbURL := os.Getenv("TEST_DB_URL")
 	app.InitializeDb(dbURL)
 	defer app.DB.Close()
@@ -61,7 +61,7 @@ func TestMain(m *testing.M) {
 	if err != nil {
 		log.Fatal(err)
 	}
-	log.Println("Do stuff AFTER the tests!")
+	log.Println("Doing stuff AFTER the tests!")
 	os.Exit(exitVal)
 }
 
