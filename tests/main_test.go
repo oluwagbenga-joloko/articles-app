@@ -10,6 +10,7 @@ import (
 
 	application "github.com/oluwagbenga-joloko/articles-app/app"
 	"github.com/oluwagbenga-joloko/articles-app/models"
+	"github.com/oluwagbenga-joloko/articles-app/repository"
 )
 
 var app application.App
@@ -43,7 +44,7 @@ func clearTable() {
 }
 
 func CreateArticle(a *models.Article) {
-	err := models.CreateArticle(app.DB, a)
+	err := repository.CreateArticle(app.DB, a)
 	if err != nil {
 		log.Fatal(err)
 	}

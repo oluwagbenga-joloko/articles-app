@@ -9,10 +9,12 @@ import (
 
 	"github.com/gorilla/mux"
 	"github.com/oluwagbenga-joloko/articles-app/models"
+	"github.com/oluwagbenga-joloko/articles-app/repository"
 	"github.com/oluwagbenga-joloko/articles-app/utils"
 )
 
-// CreateArticleHandler ...
+// CreateArticleHandler hanldes Create Articles requests
+// returns handler HandlerFunc
 func CreateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var article models.Article
@@ -21,9 +23,9 @@ func CreateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 			utils.RespondWithError(w, http.StatusBadRequest, "invalid json request")
 			return
 		}
-		err = models.CreateArticle(db, &article)
+		err = repository.CreateArticle(db, &article)
 		if err != nil {
-			if inputE, ok := err.(*models.InputError); ok {
+			if inputE, ok := err.(*repository.InputError); ok {
 				utils.RespondWithError(w, http.StatusBadRequest, inputE.Message)
 				return
 			}
@@ -35,12 +37,13 @@ func CreateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 
 }
 
-// ReadArticlesHandler ....
-func ReadArticlesHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+// ReadArticleListHandler hanldes Get Article list requests
+// returns handler HandlerFunc
+func ReadArticleListHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		q := r.URL.Query()
 		var articles []models.Article
-		err := models.GetArticles(db, &articles, q)
+		err := repository.GetArticles(db, &articles, q)
 		if err != nil {
 			fmt.Println(err)
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
@@ -51,8 +54,9 @@ func ReadArticlesHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request
 	}
 }
 
-//ReadArticleSingleArticleHandler ...
-func ReadArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+//ReadArticleArticleHandler handles Get Article requests
+// returns handler HandlerFunc
+func ReadArticleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		vars := mux.Vars(r)
@@ -65,7 +69,7 @@ func ReadArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *
 
 		var article models.Article
 
-		err = models.GetArticle(db, &article, id)
+		err = repository.GetArticle(db, &article, id)
 		if err == sql.ErrNoRows {
 			utils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("article with id %v not found", id))
 			return
@@ -80,8 +84,9 @@ func ReadArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *
 	}
 }
 
-// DeleteArticleSingleArticleHandler ...
-func DeleteArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
+// DeleteArticleArticleHandler handles Delete Articles requests
+// returns handler HandlerFunc
+func DeleteArticleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
 		id, err := strconv.Atoi(vars["id"])
@@ -93,7 +98,7 @@ func DeleteArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r
 
 		var article models.Article
 
-		err = models.GetArticle(db, &article, id)
+		err = repository.GetArticle(db, &article, id)
 		if err == sql.ErrNoRows {
 			utils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("article with id %v not found", id))
 			return
@@ -103,7 +108,7 @@ func DeleteArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
 			return
 		}
-		err = models.DeleteArticle(db, article.ID)
+		err = repository.DeleteArticle(db, article.ID)
 		if err != nil {
 			fmt.Println(err)
 			utils.RespondWithError(w, http.StatusInternalServerError, "internal server error")
@@ -113,7 +118,8 @@ func DeleteArticleSingleArticleHandler(db *sql.DB) func(w http.ResponseWriter, r
 	}
 }
 
-//UpdateArticleHandler ...
+// UpdateArticleHandler handles update Article requests
+// returns handler HandlerFunc
 func UpdateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Request) {
 	return func(w http.ResponseWriter, r *http.Request) {
 		vars := mux.Vars(r)
@@ -132,7 +138,7 @@ func UpdateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 		}
 
 		var article models.Article
-		err = models.GetArticle(db, &article, id)
+		err = repository.GetArticle(db, &article, id)
 		if err == sql.ErrNoRows {
 			utils.RespondWithError(w, http.StatusNotFound, fmt.Sprintf("article with id %v not found", id))
 			return
@@ -143,10 +149,10 @@ func UpdateArticleHandler(db *sql.DB) func(w http.ResponseWriter, r *http.Reques
 			return
 		}
 
-		err = models.UpdateArticle(db, &article, data)
+		err = repository.UpdateArticle(db, &article, data)
 		if err != nil {
 			fmt.Println(err)
-			if inputE, ok := err.(*models.InputError); ok {
+			if inputE, ok := err.(*repository.InputError); ok {
 				utils.RespondWithError(w, http.StatusBadRequest, inputE.Message)
 				return
 			}
