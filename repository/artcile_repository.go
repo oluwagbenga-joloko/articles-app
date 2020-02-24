@@ -148,11 +148,10 @@ func UpdateArticle(db *sql.DB, article *models.Article, data map[string]interfac
 	if err != nil {
 		return err
 	}
-	n, err := res.RowsAffected()
+	_, err = res.RowsAffected()
 	if err != nil {
 		return err
 	}
-	fmt.Println(n)
 	return nil
 }
 
